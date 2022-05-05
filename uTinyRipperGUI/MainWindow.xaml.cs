@@ -378,11 +378,17 @@ namespace uTinyRipperGUI
 		{
 			while (true)
 			{
-				using (System.Windows.Forms.FolderBrowserDialog folderDialog = new System.Windows.Forms.FolderBrowserDialog())
+				using (System.Windows.Forms.OpenFileDialog folderDialog = new System.Windows.Forms.OpenFileDialog())
 				{
-					folderDialog.ShowNewFolderButton = true;
-					folderDialog.Description = $"Select export folder. New folder '{GameStructure.Name}' will be created inside selected one";
-					folderDialog.SelectedPath = Settings.Default.ExportFolderPath;
+					folderDialog.Filter = "All Files (*.*)|*.*";
+					folderDialog.Title = $"Select export folder. New folder '{GameStructure.Name}' will be created inside selected one";
+					//folderDialog.FilterIndex = 1;
+					//folderDialog.Multiselect = true;
+					folderDialog.ValidateNames = false;
+					folderDialog.CheckFileExists = false;
+					folderDialog.CheckPathExists = true;
+					folderDialog.FileName = "Folder Selection";
+					folderDialog.InitialDirectory = Settings.Default.ExportFolderPath;
 #if VIRTUAL
 					System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.OK;
 #else
@@ -390,7 +396,9 @@ namespace uTinyRipperGUI
 #endif
 					if (result == System.Windows.Forms.DialogResult.OK)
 					{
-						string path = Path.Combine(folderDialog.SelectedPath, GameStructure.Name);
+						string SelectedPath = System.IO.Path.GetDirectoryName(folderDialog.FileName);
+						string path = Path.Combine(SelectedPath, GameStructure.Name);
+						
 						if (File.Exists(path))
 						{
 							MessageBox.Show(this, "Unable to export assets into selected folder. Choose another one.",
@@ -412,7 +420,7 @@ namespace uTinyRipperGUI
 
 						IntroText.Text = "Exporting assets...";
 						ExportButton.Visibility = Visibility.Hidden;
-						Settings.Default.ExportFolderPath = folderDialog.SelectedPath;
+						Settings.Default.ExportFolderPath = SelectedPath;
 						Settings.Default.Save();
 
 						ThreadPool.QueueUserWorkItem(new WaitCallback(ExportFiles), path);
